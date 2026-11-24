@@ -276,7 +276,6 @@
           '<button class="btn primary" data-act="load">▶ Play song</button>' +
           '<button class="btn" data-act="restart" hidden>↺ From the top</button>' +
           '<label class="switch" data-loopwrap hidden><input type="checkbox" data-act="loop"> <span>Loop</span></label>' +
-          '<a class="btn ghost" href="' + esc(sc) + '" target="_blank" rel="noopener">Open on SoundCloud</a>' +
           (yt ? '<a class="btn ghost" href="https://www.youtube.com/watch?v=' + yt.id + '" target="_blank" rel="noopener">YouTube</a>' : '') +
           (start || end ? '<span class="range">Plays ' + fmtTime(start || 0) + (end ? '–' + fmtTime(end) : ' to the end') + '</span>' : '') +
         '</div>' +
@@ -570,6 +569,15 @@
     players.forEach(function (p) { if (p !== except && p.pauseVideo) p.pauseVideo(); });
     $$('.player').forEach(function (b) { if (b._sc && b._sc !== except) b._sc.pause(); });
   }
+  // Only shown when a song can't play inside the page, so nobody is stuck.
+  function scFallback(box, message) {
+    var hint = $('.hint', box);
+    hint.textContent = message + ' ';
+    var a = document.createElement('a');
+    a.href = box.dataset.sc; a.target = '_blank'; a.rel = 'noopener';
+    a.textContent = 'Listen on SoundCloud instead';
+    hint.appendChild(a);
+  }
   function startSoundCloud(box) {
     var frame = $('.sc-frame', box);
     var start = (parseFloat(box.dataset.start) || 0) * 1000;
@@ -607,11 +615,11 @@
         if ($('[data-act="loop"]', box).checked) { w.seekTo(start); w.play(); }
       });
       w.bind(SC.Widget.Events.ERROR, function () {
-        $('.hint', box).textContent = 'This track can\'t play inside the site. Use "Open on SoundCloud" instead, and tell your director.';
+        scFallback(box, 'This song can\'t play inside the site right now. Please tell your director.');
       });
     }).catch(function () {
       loadBtn.textContent = '▶ Play song';
-      $('.hint', box).textContent = 'Couldn\'t reach SoundCloud. Check your connection, or use "Open on SoundCloud".';
+      scFallback(box, 'Couldn\'t load the song. Check your connection and tap Play song again.');
     });
   }
 
