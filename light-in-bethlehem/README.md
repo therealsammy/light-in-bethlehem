@@ -37,7 +37,7 @@ Each song can have a `"soundcloud"` link (audio only, preferred) and/or a `"yout
 
 Keep the quotes and the comma at the end of each line. A song with no link gets a **Find on YouTube** button instead. The **Cast & songs** page shows which songs still need links.
 
-Songs that still need a link: Chinedum, Joy to the World (highlife), We Three Kings and Excess Love. None had a good official upload on SoundCloud, so use YouTube links for those.
+Songs that still need a link: Joy to the World (highlife), We Three Kings and Excess Love. None had a good official upload on SoundCloud, so use YouTube links for those. Chinedum uses a YouTube link.
 
 If the cast report that a song won't play, or only plays a 30-second preview, swap in another upload of the same song.
 
