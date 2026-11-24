@@ -2,95 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Light in Bethlehem</title>
-  <meta name="description" content="Script, songs and rehearsal helper for Light in Bethlehem: A Christmas Musical.">
-  <meta name="theme-color" content="#141634">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23141634'/%3E%3Cpath d='M16 4l2.6 9.4L28 16l-9.4 2.6L16 28l-2.6-9.4L4 16l9.4-2.6z' fill='%23f5c451'/%3E%3C/svg%3E">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Literata:ital,opsz,wght@1,7..72,400&family=Unbounded:wght@600;700&display=swap">
-  <link rel="stylesheet" href="style.css">
+  <meta http-equiv="refresh" content="0; url=../">
+  <script>location.replace('../' + location.search + location.hash);</script>
+  <style>body{font-family:system-ui,sans-serif;background:#141634;color:#f6f1e4;display:grid;place-items:center;min-height:100vh;margin:0}a{color:#f5c451}</style>
 </head>
 <body>
-  <header class="appbar">
-    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2l3 11 11 3-11 3-3 11-3-11-11-3 11-3z" fill="currentColor"/></svg>
-    <div class="appbar-titles">
-      <span class="appbar-title" id="appTitle">Light in Bethlehem</span>
-      <span class="appbar-sub" id="appSub"></span>
-    </div>
-    <button class="role-chip empty" id="roleChip" type="button"><span>Pick your role</span></button>
-  </header>
-
-  <nav class="tabbar" aria-label="Sections">
-    <a class="tab" href="#script" data-view="script" aria-current="page">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>
-      <span>Script</span>
-    </a>
-    <a class="tab" href="#my-part" data-view="my-part">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
-      <span>My part</span>
-    </a>
-    <a class="tab" href="#songs" data-view="songs">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>
-      <span>Songs</span>
-    </a>
-    <a class="tab" href="#cast" data-view="cast">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="9" r="3"/><circle cx="17" cy="9" r="3"/><path d="M2 20c1-3 3.5-5 6-5s5 2 6 5M13 16.5c1-1 2.4-1.5 4-1.5 2.5 0 5 2 6 5"/></svg>
-      <span>Cast</span>
-    </a>
-  </nav>
-
-  <div class="shell" id="shell">
-    <aside class="rail" aria-label="Scenes"><nav class="index" id="railIndex"></nav></aside>
-    <main>
-      <section class="view" id="view-script"><p class="loading">Loading the script…</p></section>
-      <section class="view" id="view-my-part" hidden></section>
-      <section class="view" id="view-songs" hidden></section>
-      <section class="view" id="view-cast" hidden></section>
-    </main>
-  </div>
-
-  <div class="dock" id="dock" hidden>
-    <div class="who-now" id="dockStatus" aria-live="polite"></div>
-    <div class="controls">
-      <select id="dockRate" aria-label="Reading speed">
-        <option value="0.85">Slow</option>
-        <option value="1" selected>Normal</option>
-        <option value="1.15">Fast</option>
-      </select>
-      <button class="btn on-night" id="dockPause" type="button">Pause</button>
-      <button class="btn gold" id="dockNext" type="button">Next</button>
-      <button class="btn on-night" id="dockStop" type="button" aria-label="Stop rehearsing">✕</button>
-    </div>
-  </div>
-
-  <div class="sheet" id="roleSheet" hidden>
-    <div class="sheet-backdrop" data-close></div>
-    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="roleSheetTitle">
-      <div class="sheet-grip"></div>
-      <div class="sheet-head">
-        <div><h2 id="roleSheetTitle">Who are you playing?</h2><p>Your lines light up gold, and My part shows your scenes and songs.</p></div>
-        <button class="icon-btn" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-      </div>
-      <div id="roleList"></div>
-    </div>
-  </div>
-
-  <div class="sheet" id="sceneSheet" hidden>
-    <div class="sheet-backdrop" data-close></div>
-    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sceneSheetTitle">
-      <div class="sheet-grip"></div>
-      <div class="sheet-head">
-        <h2 id="sceneSheetTitle">Scenes</h2>
-        <button class="icon-btn" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-      </div>
-      <nav class="index" id="sheetIndex"></nav>
-    </div>
-  </div>
-
-  <div class="cards" id="cards" hidden role="dialog" aria-modal="true" aria-label="Cue cards"></div>
-
-  <script src="app.js"></script>
+  <p>Light in Bethlehem has moved to <a href="../">a shorter address</a>…</p>
 </body>
 </html>
