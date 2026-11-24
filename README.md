@@ -42,7 +42,7 @@ Each song can have an `"audiomack"` link or a `"soundcloud"` link (both audio on
 "3": {"artist": "Boney M", "search": "Mary's Boy Child Boney M", "audiomack": "", "soundcloud": "https://soundcloud.com/boney-m-official/marys-boy-child-oh-my-lord-1", "youtube": "", "start": "0:15", "end": "2:40"},
 ```
 
-Keep the quotes and the comma at the end of each line. The **Songs** tab shows which songs still need a recording. Right now that's Joy to the World (highlife).
+Keep the quotes and the comma at the end of each line. The **Songs** tab shows which songs still need a recording. Right now every song has one.
 
 If the cast report that a song won't play, or only plays a 30-second preview, swap in another upload of the same song.
 
