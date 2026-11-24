@@ -263,7 +263,13 @@
     var searchUrl = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(query);
     var player;
     var sc = soundcloudUrl(cfg.soundcloud);
-    if (sc) {
+    if (window.LIB_NO_EMBEDS && (sc || yt)) {
+      // Preview hosts that block embedded players: link out instead.
+      player = '<div class="player"><div class="controls">' +
+        (sc ? '<a class="btn primary" href="' + esc(sc) + '" target="_blank" rel="noopener">▶ Listen on SoundCloud</a>' : '') +
+        (yt ? '<a class="btn' + (sc ? ' ghost' : ' primary') + '" href="https://www.youtube.com/watch?v=' + yt.id + '" target="_blank" rel="noopener">▶ YouTube</a>' : '') +
+        '</div><p class="hint">Opens in a new tab.</p></div>';
+    } else if (sc) {
       player = '<div class="player" data-sc="' + esc(sc) + '" data-start="' + (start || '') + '" data-end="' + (end || '') + '">' +
         '<div class="sc-frame" hidden></div>' +
         '<div class="controls">' +
@@ -416,7 +422,7 @@
     store.set('lib.role', state.role ? state.role.id : null);
     var url = new URL(location.href);
     if (state.role) url.searchParams.set('role', state.role.label); else url.searchParams.delete('role');
-    history.replaceState(null, '', url);
+    try { history.replaceState(null, '', url); } catch (e) { /* some hosts block URL changes */ }
     applyRole();
     if (state.role && !(opts && opts.quiet)) {
       showView('script');
