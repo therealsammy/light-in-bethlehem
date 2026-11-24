@@ -4,11 +4,12 @@ A website for the cast of *Light in Bethlehem: A Christmas Musical*. Cast member
 
 ## What the cast can do
 
-- **Pick your role:** their lines are highlighted, and they see a list of the scenes and songs they're in.
-- **Practice mode:** hides their lines so they can test themselves. Tapping a line reveals it.
-- **Rehearse from here:** the phone reads everyone else's lines aloud, stops for theirs, and pauses at each song.
-- **"I know this" checkboxes:** track which scenes they've learned. This is saved on their own phone only.
-- **Share this role's link:** gives a link that opens straight on that role, e.g. `.../light-in-bethlehem/?role=Mary`.
+The site has four tabs:
+
+- **Script:** the whole play, with each character in their own colour. After picking a role, your lines turn gold. "Hide my lines" blurs them so you can test yourself, and A− / A+ changes the text size. Each scene has a **Rehearse** button: the phone reads everyone else's lines aloud, stops for yours, and pauses at songs.
+- **My part:** your character notes, how many lines, scenes and songs you have, your progress, and the director's notes meant for you. **Cue cards** show the line before each of yours. Say your line, tap to check it, then mark it "Got it" or "Again later". Tick scenes off as you learn them (saved on your phone only). **Share my link** opens the site straight on your role, e.g. `.../light-in-bethlehem/?role=Mary`.
+- **Songs:** all the songs in show order, each with its player and where it comes in the show.
+- **Cast:** every character, staging and props, and the general director's notes.
 
 ## Editing (no coding needed)
 
@@ -29,15 +30,15 @@ A new character speaking for the first time is added to the role list automatica
 
 ### `songs.json`: the song links
 
-Each song can have a `"soundcloud"` link (audio only, preferred) and/or a `"youtube"` link. If both are filled in, SoundCloud plays. `"start"` and `"end"` are optional, so the cast only hear the part they sing:
+Each song can have an `"audiomack"` link or a `"soundcloud"` link (both audio only), and/or a `"youtube"` link (shows a small video while it plays). If more than one is filled in, Audiomack plays first, then SoundCloud, then YouTube. For Audiomack, paste the song's normal page link (like `https://audiomack.com/mercychinwo/song/omekannaya`), or the link inside Audiomack's **Embed** code if that one doesn't load.
+
+`"start"` and `"end"` are optional (SoundCloud and YouTube only), so the cast only hear the part they sing:
 
 ```json
-"3": {"artist": "Boney M", "search": "Mary's Boy Child Boney M", "soundcloud": "https://soundcloud.com/boney-m-official/marys-boy-child-oh-my-lord-1", "youtube": "", "start": "0:15", "end": "2:40"},
+"3": {"artist": "Boney M", "search": "Mary's Boy Child Boney M", "audiomack": "", "soundcloud": "https://soundcloud.com/boney-m-official/marys-boy-child-oh-my-lord-1", "youtube": "", "start": "0:15", "end": "2:40"},
 ```
 
-Keep the quotes and the comma at the end of each line. A song with no link gets a **Find on YouTube** button instead. The **Cast & songs** page shows which songs still need links.
-
-Songs that still need a link: Joy to the World (highlife), We Three Kings and Excess Love. None had a good official upload on SoundCloud, so use YouTube links for those. Chinedum uses a YouTube link.
+Keep the quotes and the comma at the end of each line. The **Songs** tab shows which songs still need a recording. Right now that's Joy to the World (highlife) and We Three Kings.
 
 If the cast report that a song won't play, or only plays a 30-second preview, swap in another upload of the same song.
 
