@@ -10,21 +10,40 @@ permissions:
   pages: write
   id-token: write
 
+# One deploy at a time. A newer push waits for the current deploy to finish
+# instead of cancelling it halfway.
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  # Package the site. Kept separate from publishing so GitHub has finished
+  # registering the package before the deploy job asks for it.
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .
+
+  # Publish the package. If GitHub Pages has a temporary hiccup, wait a
+  # minute and try once more before giving up.
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url || steps.retry.outputs.page_url }}
+    steps:
       - id: deployment
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+      - if: steps.deployment.outcome == 'failure'
+        run: |
+          echo "First deploy attempt failed; retrying in 60 seconds."
+          sleep 60
+      - id: retry
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v4
