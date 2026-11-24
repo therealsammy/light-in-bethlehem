@@ -257,6 +257,8 @@ h1, h2, h3 { text-wrap: balance; }
 
 .script { font-size: var(--fs); }
 .direction { font-family: var(--stage); font-style: italic; color: var(--muted); margin: 14px 0; padding: 0 4px; font-size: .97em; line-height: 1.6; }
+.direction { position: relative; }
+.direction > p { margin: 0; }
 .para { margin: 12px 0; }
 .line { --c: var(--c7); position: relative; margin: 6px 0; padding: 8px 12px 10px 16px; border-radius: 12px; transition: background .2s; }
 .line::before { content: ""; position: absolute; left: 4px; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: var(--c); opacity: .85; }
@@ -271,6 +273,26 @@ body.practice .line.mine:not(.revealed) .txt { filter: blur(7px); user-select: n
 body.practice .line.mine:not(.revealed) .who::after { content: "You · tap to check"; }
 .now { background: var(--surface-2) !important; box-shadow: 0 0 0 2px var(--star-fill); }
 
+/* Director's notes: a pin on the line, opened with a tap */
+.has-note { padding-right: 46px; }
+.direction.has-note { padding-right: 46px; }
+.note-pin {
+  position: absolute; top: 6px; right: 6px;
+  width: 32px; height: 32px; border-radius: 50%; padding: 0;
+  display: grid; place-items: center;
+  border: 1px solid var(--line); background: var(--surface); color: var(--coral);
+  transition: background .15s, color .15s, transform .15s;
+}
+.note-pin svg { width: 17px; height: 17px; }
+.note-pin:hover { transform: scale(1.06); }
+.note-pin.for-you { background: var(--star-fill); border-color: var(--star-fill); color: #241903; }
+.note-pin[aria-expanded="true"] { background: var(--coral); border-color: var(--coral); color: #fff; }
+.note-body { display: none; margin: 10px -34px 2px 0; padding: 10px 12px; border-radius: 10px; background: var(--surface); border: 1px dashed var(--line); font: 400 .9rem/1.5 var(--text); font-style: normal; color: var(--ink); }
+.note-open > .note-body, body.notes-open .note-body { display: block; }
+.note-body p { margin: 0; }
+.note-body p + p { margin-top: 8px; }
+.note-body .label { display: block; font: 700 .64rem/1 var(--text); letter-spacing: .14em; text-transform: uppercase; color: var(--coral); margin-bottom: 5px; }
+.note-solo { position: relative; min-height: 40px; }
 .note {
   display: flex; gap: 12px; margin: 16px 0; padding: 12px 14px;
   border-radius: 12px; background: var(--surface); border: 1px dashed var(--line);

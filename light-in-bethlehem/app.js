@@ -40,7 +40,7 @@
     get: function (k, d) { try { var v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
     set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* private mode */ } }
   };
-  var state = { doc: null, songs: {}, roles: [], byId: {}, role: null, practice: store.get('lib.practice', false), view: 'script', cast: [] };
+  var state = { notesOpen: store.get('lib.notesOpen', false), doc: null, songs: {}, roles: [], byId: {}, role: null, practice: store.get('lib.practice', false), view: 'script', cast: [] };
 
   var ICON = {
     play: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>',
@@ -448,23 +448,45 @@
   }
 
   // ---------- Script view ----------
-  function blockHTML(b) {
+  // Director's notes sit behind a small pin on the line they belong to, so they don't break up the reading.
+  var noteSeq = 0;
+  function notesHTML(notes) {
+    if (!notes || !notes.length) return '';
+    var id = 'note-' + (++noteSeq);
+    var who = notes.map(function (n) { return n.text.split(':')[0].trim().toLowerCase(); }).join('|');
+    return '<button class="note-pin" type="button" aria-expanded="false" aria-controls="' + id + '" data-note-who="' + esc(who) + '" aria-label="Director\'s note" title="Director\'s note">' + ICON.clapper + '</button>' +
+      '<div class="note-body" id="' + id + '">' + notes.map(function (n) {
+        return '<p><span class="label">Director\'s note</span>' + inline(n.text) + '</p>';
+      }).join('') + '</div>';
+  }
+  function blockHTML(b, notes) {
+    var pin = notesHTML(notes), has = pin ? ' has-note' : '';
     if (b.type === 'line') {
       var r = roleFor(b.speakers[0]);
-      return '<div class="line" data-speakers="' + esc(b.speakers.join('|')) + '" style="--c:var(--c' + r.color + ')">' +
-        '<div class="who">' + esc(b.name) + '</div><p class="txt">' + inline(b.text) + '</p></div>';
+      return '<div class="line' + has + '" data-speakers="' + esc(b.speakers.join('|')) + '" style="--c:var(--c' + r.color + ')">' +
+        '<div class="who">' + esc(b.name) + '</div><p class="txt">' + inline(b.text) + '</p>' + pin + '</div>';
     }
-    if (b.type === 'direction') return '<p class="direction">' + inline(b.text) + '</p>';
-    if (b.type === 'note') return '<aside class="note">' + ICON.clapper + '<div><span class="label">Director\'s note</span><p>' + inline(b.text) + '</p></div></aside>';
+    if (b.type === 'direction') return '<div class="direction' + has + '"><p>' + inline(b.text) + '</p>' + pin + '</div>';
+    if (b.type === 'note') return '<div class="note-solo has-note">' + pin + '</div>';
     if (b.type === 'li') return '<li>' + inline(b.text) + '</li>';
     return '<p class="para">' + inline(b.text) + '</p>';
   }
+  // Attach each run of director's notes to the block just before it.
   function blocksHTML(blocks) {
-    var out = '', inList = false;
+    var out = '', inList = false, items = [];
     blocks.forEach(function (b) {
+      var last = items[items.length - 1];
+      if (b.type === 'note') {
+        if (last && last.b.type !== 'li') { last.notes.push(b); return; }
+        items.push({ b: { type: 'note' }, notes: [b] }); return;
+      }
+      items.push({ b: b, notes: [] });
+    });
+    items.forEach(function (it) {
+      var b = it.b;
       if (b.type === 'li' && !inList) { out += '<ul class="list">'; inList = true; }
       if (b.type !== 'li' && inList) { out += '</ul>'; inList = false; }
-      out += blockHTML(b);
+      out += blockHTML(b, it.notes);
     });
     return out + (inList ? '</ul>' : '');
   }
@@ -531,6 +553,7 @@
     var html = heroHTML() +
       '<div class="column"><div class="toolbar">' +
         '<label class="toggle"><input type="checkbox" id="practiceToggle"' + (state.practice ? ' checked' : '') + '><span class="knob"></span><span>Hide my lines</span></label>' +
+        '<label class="toggle"><input type="checkbox" id="notesToggle"' + (state.notesOpen ? ' checked' : '') + '><span class="knob"></span><span>Show all notes</span></label>' +
         '<div class="group"><span class="size-btns" role="group" aria-label="Text size"><button type="button" data-size="-1" aria-label="Smaller text">A−</button><button type="button" data-size="1" aria-label="Larger text">A+</button></span>' +
         '<button class="btn small" type="button" data-open-scenes>' + ICON.list + 'Scenes</button></div>' +
       '</div><article class="script" id="script">';
@@ -575,6 +598,12 @@
     $$('.line').forEach(function (el) {
       el.classList.toggle('mine', !!r && el.dataset.speakers.split('|').indexOf(r.id) !== -1);
       el.classList.remove('revealed');
+    });
+    var keys = r ? [r.label.toLowerCase(), r.id.toLowerCase()].concat(r.keys) : [];
+    $$('.note-pin').forEach(function (p) {
+      var who = p.dataset.noteWho.split('|');
+      p.classList.toggle('for-you', !!r && who.some(function (w) { return w === 'everyone' || keys.some(function (k) { return w.indexOf(k) !== -1; }); }));
+      p.setAttribute('aria-expanded', String(state.notesOpen || p.parentElement.classList.contains('note-open')));
     });
     $$('#view-script [data-section]').forEach(function (el) {
       var id = el.dataset.section, on = !!featured[id];
@@ -1030,11 +1059,24 @@
       }
       if ((el = t.closest('.player [data-act="load"]'))) { startPlayer(el.closest('.player')); return; }
       if ((el = t.closest('.player [data-act="restart"]'))) { restartPlayer(el.closest('.player')); return; }
+      if ((el = t.closest('.note-pin'))) {
+        var host = el.parentElement, open = !host.classList.contains('note-open');
+        host.classList.toggle('note-open', open);
+        el.setAttribute('aria-expanded', String(open || state.notesOpen));
+        return;
+      }
+      if (t.closest('.note-body')) return;
       if ((el = t.closest('body.practice .line.mine'))) { el.classList.toggle('revealed'); return; }
     });
     document.addEventListener('change', function (e) {
       var t = e.target;
       if (t.dataset.learned && state.role) { setLearned(t.dataset.learned, t.checked); if (t.checked) toast('Nice! Marked as learned'); renderIndex(); renderHeroActions(); renderMyPart(); return; }
+      if (t.id === 'notesToggle') {
+        state.notesOpen = t.checked; store.set('lib.notesOpen', state.notesOpen);
+        document.body.classList.toggle('notes-open', state.notesOpen);
+        $$('.note-pin').forEach(function (p) { p.setAttribute('aria-expanded', String(state.notesOpen || p.parentElement.classList.contains('note-open'))); });
+        return;
+      }
       if (t.id === 'practiceToggle') {
         state.practice = t.checked; store.set('lib.practice', state.practice);
         document.body.classList.toggle('practice', state.practice);
@@ -1075,6 +1117,7 @@
   function boot() {
     bind();
     document.body.classList.toggle('practice', state.practice);
+    document.body.classList.toggle('notes-open', state.notesOpen);
     document.documentElement.style.setProperty('--fs', store.get('lib.fs', 1.06) + 'rem');
     var bust = '?v=' + Date.now().toString(36).slice(0, -3); // changes about once a minute, so edits show up quickly
     Promise.all([
