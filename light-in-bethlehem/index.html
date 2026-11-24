@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Light in Bethlehem</title>
+  <meta name="description" content="Script, songs and rehearsal helper for Light in Bethlehem: A Christmas Musical.">
+  <meta name="theme-color" content="#0f1a33">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%AD%90%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <button class="icon-btn" id="navBtn" aria-label="Scenes" aria-controls="nav" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <a class="brand" href="#top"><span class="star" aria-hidden="true">✦</span> <span id="brandTitle">Light in Bethlehem</span></a>
+    <nav class="tabs" aria-label="Sections">
+      <button class="tab active" data-view="script">Script</button>
+      <button class="tab" data-view="info">Cast &amp; songs</button>
+    </nav>
+    <button class="role-btn" id="roleBtn"><span class="role-label">Pick your role</span></button>
+  </header>
+
+  <div class="layout">
+    <aside class="nav" id="nav" aria-label="Scenes">
+      <div class="nav-inner" id="navList"></div>
+    </aside>
+
+    <main id="top">
+      <section class="view" id="view-script">
+        <div class="toolbar" id="toolbar">
+          <label class="switch"><input type="checkbox" id="practiceToggle"> <span>Practice mode: hide my lines</span></label>
+        </div>
+        <div id="intro"></div>
+        <div id="rolePanel"></div>
+        <article id="script" class="script"><p class="loading">Loading the script…</p></article>
+      </section>
+      <section class="view" id="view-info" hidden>
+        <article id="info" class="info"></article>
+      </section>
+    </main>
+  </div>
+
+  <div class="rehearse-bar" id="rehearseBar" hidden>
+    <div class="rb-status" id="rbStatus" aria-live="polite"></div>
+    <div class="rb-controls">
+      <label class="rb-speed">Speed
+        <select id="rbRate"><option value="0.85">Slow</option><option value="1" selected>Normal</option><option value="1.15">Fast</option></select>
+      </label>
+      <button class="btn" id="rbPause">Pause</button>
+      <button class="btn primary" id="rbNext">Next</button>
+      <button class="btn ghost" id="rbStop" aria-label="Stop rehearsing">Stop</button>
+    </div>
+  </div>
+
+  <dialog id="roleDialog">
+    <form method="dialog" class="role-dialog">
+      <h2>Who are you playing?</h2>
+      <p class="muted">Your lines will be highlighted, and you'll see which scenes you're in. You can change this any time.</p>
+      <div id="roleList" class="role-list"></div>
+      <div class="dialog-actions">
+        <button class="btn ghost" value="none" id="clearRole">Just reading</button>
+        <button class="btn" value="cancel">Close</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
