@@ -107,6 +107,17 @@
     } catch (e) { return null; }
   }
 
+  function soundcloudUrl(v) {
+    if (!v) return null;
+    try {
+      var u = new URL(String(v).trim());
+      if (!/(^|\.)soundcloud\.com$/.test(u.hostname)) return null;
+      u.hostname = 'soundcloud.com'; // m.soundcloud.com links work too
+      u.search = '';
+      return u.toString();
+    } catch (e) { return null; }
+  }
+
   // ---------- Parse script.md ----------
   function parseSpeakers(name) {
     // "NARRATOR 1 and 2 together" -> ["NARRATOR 1", "NARRATOR 2"]
@@ -251,7 +262,21 @@
     var query = cfg.search || s.song.name;
     var searchUrl = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(query);
     var player;
-    if (yt) {
+    var sc = soundcloudUrl(cfg.soundcloud);
+    if (sc) {
+      player = '<div class="player" data-sc="' + esc(sc) + '" data-start="' + (start || '') + '" data-end="' + (end || '') + '">' +
+        '<div class="sc-frame" hidden></div>' +
+        '<div class="controls">' +
+          '<button class="btn primary" data-act="load">▶ Play song</button>' +
+          '<button class="btn" data-act="restart" hidden>↺ From the top</button>' +
+          '<label class="switch" data-loopwrap hidden><input type="checkbox" data-act="loop"> <span>Loop</span></label>' +
+          '<a class="btn ghost" href="' + esc(sc) + '" target="_blank" rel="noopener">Open on SoundCloud</a>' +
+          (yt ? '<a class="btn ghost" href="https://www.youtube.com/watch?v=' + yt.id + '" target="_blank" rel="noopener">YouTube</a>' : '') +
+          (start || end ? '<span class="range">Plays ' + fmtTime(start || 0) + (end ? '–' + fmtTime(end) : ' to the end') + '</span>' : '') +
+        '</div>' +
+        '<p class="hint">Audio only. Uses mobile data. Keep the screen on while it plays.</p>' +
+      '</div>';
+    } else if (yt) {
       var watch = 'https://www.youtube.com/watch?v=' + yt.id + (start ? '&t=' + start + 's' : '');
       player = '<div class="player" data-yt="' + yt.id + '" data-start="' + (start || '') + '" data-end="' + (end || '') + '">' +
         '<div class="frame" hidden></div>' +
@@ -267,7 +292,7 @@
     } else {
       player = '<div class="player"><div class="controls">' +
         '<a class="btn primary" href="' + searchUrl + '" target="_blank" rel="noopener">Find on YouTube</a></div>' +
-        '<p class="hint">No song link yet. Your director can add one in songs.json.</p></div>';
+        '<p class="hint">No song link yet, so this searches YouTube. Your director can add a link in songs.json.</p></div>';
     }
     return '<section class="section song-card" id="' + s.id + '" data-section="' + s.id + '" data-kind="song">' +
       '<div class="section-head"><div><div class="eyebrow">' + esc(s.song.label) + '</div>' +
@@ -442,14 +467,19 @@
   function renderInfo() {
     var songSections = [];
     state.doc.acts.forEach(function (a) { a.sections.forEach(function (s) { if (s.kind === 'song') songSections.push(s); }); });
-    var withLink = songSections.filter(function (s) { return youtubeInfo((state.songs[s.song.key] || {}).youtube); }).length;
+    function source(cfg) {
+      if (soundcloudUrl(cfg.soundcloud)) return 'SoundCloud';
+      if (youtubeInfo(cfg.youtube)) return 'YouTube';
+      return null;
+    }
+    var withLink = songSections.filter(function (s) { return source(state.songs[s.song.key] || {}); }).length;
     var songRows = songSections.map(function (s) {
       var cfg = state.songs[s.song.key] || {};
-      var ok = youtubeInfo(cfg.youtube);
-      return '<tr><td>' + esc(s.song.label) + '</td><td><a href="#' + s.id + '" data-goto>' + esc(s.song.name) + '</a><br><span class="muted">' + esc(cfg.artist || '') + '</span></td><td class="' + (ok ? 'ok">✓ Linked' : 'missing">No link yet') + '</td></tr>';
+      var src = source(cfg);
+      return '<tr><td>' + esc(s.song.label) + '</td><td><a href="#' + s.id + '" data-goto>' + esc(s.song.name) + '</a><br><span class="muted">' + esc(cfg.artist || '') + '</span></td><td class="' + (src ? 'ok">✓ ' + src : 'missing">No link yet') + '</td></tr>';
     }).join('');
     $('#info').innerHTML = '<h2>' + esc(state.doc.title) + '</h2>' + mdBlock(state.doc.overview) +
-      '<h3>Song links</h3><p class="muted">' + withLink + ' of ' + songSections.length + ' songs have a YouTube link. Links live in <code>songs.json</code>.</p>' +
+      '<h3>Song links</h3><p class="muted">' + withLink + ' of ' + songSections.length + ' songs have a SoundCloud or YouTube link. Links live in <code>songs.json</code>.</p>' +
       '<div class="table-wrap"><table><thead><tr><th>#</th><th>Song</th><th>Player</th></tr></thead><tbody>' + songRows + '</tbody></table></div>';
   }
 
@@ -513,6 +543,69 @@
     }).catch(function () {
       loadBtn.textContent = '▶ Play song';
       $('.hint', box).textContent = 'Couldn\'t reach YouTube. Check your connection, or use "Open on YouTube".';
+    });
+  }
+
+  // ---------- SoundCloud players ----------
+  var scReady = null;
+  function loadSC() {
+    if (scReady) return scReady;
+    scReady = new Promise(function (resolve, reject) {
+      if (window.SC && window.SC.Widget) return resolve(window.SC);
+      var s = document.createElement('script');
+      s.src = 'https://w.soundcloud.com/player/api.js';
+      s.onload = function () { resolve(window.SC); };
+      s.onerror = function () { scReady = null; reject(new Error('SoundCloud could not load')); };
+      document.head.appendChild(s);
+    });
+    return scReady;
+  }
+  function pauseOthers(except) {
+    players.forEach(function (p) { if (p !== except && p.pauseVideo) p.pauseVideo(); });
+    $$('.player').forEach(function (b) { if (b._sc && b._sc !== except) b._sc.pause(); });
+  }
+  function startSoundCloud(box) {
+    var frame = $('.sc-frame', box);
+    var start = (parseFloat(box.dataset.start) || 0) * 1000;
+    var end = parseFloat(box.dataset.end) ? parseFloat(box.dataset.end) * 1000 : null;
+    var loadBtn = $('[data-act="load"]', box);
+    loadBtn.textContent = 'Loading…';
+    loadSC().then(function (SC) {
+      var iframe = document.createElement('iframe');
+      iframe.title = 'Song player';
+      iframe.allow = 'autoplay';
+      iframe.width = '100%';
+      iframe.height = '120';
+      iframe.style.border = '0';
+      iframe.src = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(box.dataset.sc) +
+        '&color=%238d6cc8&auto_play=false&hide_related=true&show_comments=false&show_reposts=false&show_teaser=false&visual=false';
+      frame.appendChild(iframe);
+      frame.hidden = false;
+      var w = SC.Widget(iframe);
+      box._sc = w;
+      w.bind(SC.Widget.Events.READY, function () {
+        pauseOthers(w);
+        if (start) w.seekTo(start);
+        w.play();
+        loadBtn.hidden = true;
+        $('[data-act="restart"]', box).hidden = false;
+        $('[data-loopwrap]', box).hidden = false;
+      });
+      w.bind(SC.Widget.Events.PLAY, function () { pauseOthers(w); });
+      w.bind(SC.Widget.Events.PLAY_PROGRESS, function (e) {
+        if (end && e.currentPosition >= end) {
+          if ($('[data-act="loop"]', box).checked) w.seekTo(start); else { w.pause(); w.seekTo(start); }
+        }
+      });
+      w.bind(SC.Widget.Events.FINISH, function () {
+        if ($('[data-act="loop"]', box).checked) { w.seekTo(start); w.play(); }
+      });
+      w.bind(SC.Widget.Events.ERROR, function () {
+        $('.hint', box).textContent = 'This track can\'t play inside the site. Use "Open on SoundCloud" instead, and tell your director.';
+      });
+    }).catch(function () {
+      loadBtn.textContent = '▶ Play song';
+      $('.hint', box).textContent = 'Couldn\'t reach SoundCloud. Check your connection, or use "Open on SoundCloud".';
     });
   }
 
@@ -630,10 +723,15 @@
         else if (navigator.clipboard) navigator.clipboard.writeText(link).then(function () { el.textContent = 'Link copied ✓'; });
         return;
       }
-      if ((el = t.closest('.player [data-act="load"]'))) { startPlayer(el.closest('.player')); return; }
+      if ((el = t.closest('.player [data-act="load"]'))) {
+        var pbox = el.closest('.player');
+        if (pbox.dataset.sc) startSoundCloud(pbox); else startPlayer(pbox);
+        return;
+      }
       if ((el = t.closest('.player [data-act="restart"]'))) {
         var box = el.closest('.player');
-        if (box._player) { box._player.seekTo(parseFloat(box.dataset.start) || 0, true); box._player.playVideo(); }
+        if (box._sc) { box._sc.seekTo((parseFloat(box.dataset.start) || 0) * 1000); box._sc.play(); }
+        else if (box._player) { box._player.seekTo(parseFloat(box.dataset.start) || 0, true); box._player.playVideo(); }
         return;
       }
       if ((el = t.closest('body.practice .line.mine'))) { el.classList.toggle('revealed'); return; }

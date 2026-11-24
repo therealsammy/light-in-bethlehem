@@ -29,15 +29,17 @@ A new character speaking for the first time is added to the role list automatica
 
 ### `songs.json`: the song links
 
-Paste a YouTube link into `"youtube"` for each song. `"start"` and `"end"` are optional, so the cast only hear the part they sing:
+Each song can have a `"soundcloud"` link (audio only, preferred) and/or a `"youtube"` link. If both are filled in, SoundCloud plays. `"start"` and `"end"` are optional, so the cast only hear the part they sing:
 
 ```json
-"3": { "artist": "Boney M", "search": "Mary's Boy Child Boney M", "youtube": "https://youtu.be/XXXXXXXXXXX", "start": "0:15", "end": "2:40" },
+"3": {"artist": "Boney M", "search": "Mary's Boy Child Boney M", "soundcloud": "https://soundcloud.com/boney-m-official/marys-boy-child-oh-my-lord-1", "youtube": "", "start": "0:15", "end": "2:40"},
 ```
 
-Keep the quotes and the comma at the end of each line. Until a song has a link, the cast get a **Find on YouTube** button instead. The **Cast & songs** page shows which songs still need links.
+Keep the quotes and the comma at the end of each line. A song with no link gets a **Find on YouTube** button instead. The **Cast & songs** page shows which songs still need links.
 
-Some videos can't be played inside other websites. If the cast report that one won't play, pick another upload of the same song.
+Songs that still need a link: Chinedum, Joy to the World (highlife), We Three Kings and Excess Love. None had a good official upload on SoundCloud, so use YouTube links for those.
+
+If the cast report that a song won't play, or only plays a 30-second preview, swap in another upload of the same song.
 
 ## Privacy
 
